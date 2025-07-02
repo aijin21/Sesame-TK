@@ -20,7 +20,7 @@ import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.maps.IdMapManager;
 import fansirsqi.xposed.sesame.util.maps.ReserveaMap;
 import fansirsqi.xposed.sesame.util.RandomUtil;
-import fansirsqi.xposed.sesame.util.ResUtil;
+import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.data.Status;
 
 public class Reserve extends ModelTask {
@@ -65,6 +65,7 @@ public class Reserve extends ModelTask {
     public void run() {
         try {
             Log.record(TAG, "开始保护地任务");
+            initReserve();
             animalReserve();
         } catch (Throwable t) {
             Log.runtime(TAG, "start.run err:");
@@ -79,14 +80,10 @@ public class Reserve extends ModelTask {
      */
     public static void initReserve() {
         try {
-            // 调用 ReserveRpc 接口，查询可兑换的树项目列表
             String response = ReserveRpcCall.queryTreeItemsForExchange();
-            // 若首次调用结果为空，进行延迟后再次调用
             JSONObject jsonResponse = new JSONObject(response);
-            // 检查接口调用是否成功，resultCode 为 SUCCESS 表示成功
-            if ("SUCCESS".equals(jsonResponse.optString("resultCode", ""))) {
+            if (ResChecker.checkRes(TAG, jsonResponse)) {
                 JSONArray treeItems = jsonResponse.optJSONArray("treeItems");
-                // 遍历所有树项目，筛选符合条件的保护地项目
                 if (treeItems != null) {
                     for (int i = 0; i < treeItems.length(); i++) {
                         JSONObject item = treeItems.getJSONObject(i);
@@ -133,7 +130,7 @@ public class Reserve extends ModelTask {
                 s = ReserveRpcCall.queryTreeItemsForExchange();
             }
             JSONObject jo = new JSONObject(s);
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResChecker.checkRes(TAG,jo)) {
                 JSONArray ja = jo.getJSONArray("treeItems");
                 for (int i = 0; i < ja.length(); i++) {
                     jo = ja.getJSONObject(i);
@@ -174,7 +171,7 @@ public class Reserve extends ModelTask {
         try {
             String s = ReserveRpcCall.queryTreeForExchange(projectId);
             JSONObject jo = new JSONObject(s);
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResChecker.checkRes(TAG,jo)) {
                 String applyAction = jo.getString("applyAction");
                 int currentEnergy = jo.getInt("currentEnergy");
                 jo = jo.getJSONObject("exchangeableTree");
@@ -211,7 +208,7 @@ public class Reserve extends ModelTask {
             for (int applyCount = 1; applyCount <= count; applyCount++) {
                 s = ReserveRpcCall.exchangeTree(projectId);
                 jo = new JSONObject(s);
-                if (ResUtil.checkResultCode(jo)) {
+                if (ResChecker.checkRes(TAG,jo)) {
                     int vitalityAmount = jo.optInt("vitalityAmount", 0);
                     appliedTimes = Status.getReserveTimes(projectId) + 1;
                     String str = "领保护地🏕️[" + itemName + "]#第" + appliedTimes + "次"
