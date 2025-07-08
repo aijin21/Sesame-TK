@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-    branches: ["develop"]
+    branches: ["develop", "main"]
   pull_request:
     branches: ["develop"]
   release:
@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 授予写入权限
 
     steps:
       - name: Set Timezone to Asia/Shanghai
@@ -110,11 +112,20 @@ jobs:
 
       - name: Create Tag from Version
         if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
-        run: |
-          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
-          echo "Creating tag: $VERSION_TAG"
-          git tag "$VERSION_TAG"
-          git push origin "$VERSION_TAG"
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const tagName = 'v${{ steps.extract_info.outputs.version }}';
+            console.log(`Creating tag: ${tagName}`);
+            
+            // 创建轻量标签
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${tagName}`,
+              sha: context.sha
+            });
+            
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
