@@ -1,12 +1,11 @@
 import java.text.SimpleDateFormat
 import java.util.*
 
-// 合并所有插件到一个plugins块中
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id 'org.jetbrains.kotlin.kapt' // 仅保留一个plugins块
+    id("org.jetbrains.kotlin.kapt") // 修正为Kotlin DSL语法
 }
 
 android {
@@ -53,10 +52,10 @@ android {
             } else {
                 val error = process.errorStream.bufferedReader().use { it.readText() }
                 println("Git error: $error")
-                "1".toInt()
+                1
             }
         } catch (_: Exception) {
-            "1".toInt()
+            1
         }
 
         versionCode = gitCommitCount
@@ -74,7 +73,7 @@ android {
 
         testOptions {
             unitTests.all {
-                it.enabled = false
+                isEnabled = false
             }
         }
     }
@@ -91,12 +90,13 @@ android {
     }
     kotlin {
         compilerOptions {
-            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
 
     signingConfigs {
         getByName("debug") {
+            // 保持原有配置
         }
     }
 
@@ -136,7 +136,7 @@ android {
 
     applicationVariants.all {
         val variant = this
-        variant.outputs.all {
+        outputs.all {
             val fileName = "Sesame-TK-${variant.versionName}.apk"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
@@ -144,7 +144,6 @@ android {
 }
 
 dependencies {
-    // 核心库脱糖依赖
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     // Xposed框架依赖
