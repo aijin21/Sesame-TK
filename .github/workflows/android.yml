@@ -115,10 +115,9 @@ jobs:
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
+          name: Sesame-${{ steps.extract_info.outputs.version }}.apk # 发布的名称。默认为标签名称
           files: |
             ${{ steps.extract_apks.outputs.signed_normal }}
-            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
           tag_name: ${{ steps.extract_info.outputs.version}}
           draft: false
           append_body: true
