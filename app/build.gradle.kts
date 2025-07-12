@@ -17,13 +17,12 @@ android {
         minSdk = 21
         targetSdk = 36
 
-        if (!System.getenv("CI").toBoolean()) {
-            ndk {
-                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
-            }
+        // 仅保留arm64-v8a架构（移除多架构配置）
+        ndk {
+            abiFilters.add("arm64-v8a")
         }
 
-        // 版本配置
+        // 版本配置（保留原有逻辑）
         val major = 0
         val minor = 2
         val patch = 6
@@ -52,10 +51,10 @@ android {
             } else {
                 val error = process.errorStream.bufferedReader().use { it.readText() }
                 println("Git error: $error")
-                1
+                "1".toInt()
             }
         } catch (_: Exception) {
-            1
+            "1".toInt()
         }
 
         versionCode = gitCommitCount
@@ -71,10 +70,6 @@ android {
         buildConfigField("String", "BUILD_TAG", "\"$buildTag\"")
         buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
 
-        ndk {
-            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
-        }
-
         testOptions {
             unitTests.all {
                 it.enabled = false
@@ -87,61 +82,20 @@ android {
         compose = true
     }
 
-    flavorDimensions += "default"
-    productFlavors {
-        create("normal") {
-            dimension = "default"
-            extra["applicationType"] = "Normal"
-        }
-        create("compatible") {
-            dimension = "default"
-            extra["applicationType"] = "Compatible"
-        }
-    }
-
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true // 启用脱糖
+        // 全局默认设置（移除产品风味差异化配置）
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlin {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        }
-    }
-
-    productFlavors.all {
-        when (name) {
-            "normal" -> {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_17
-                    targetCompatibility = JavaVersion.VERSION_17
-                }
-                kotlin {
-                    compilerOptions {
-                        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-                    }
-                }
-            }
-
-            "compatible" -> {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
-                }
-                kotlin {
-                    compilerOptions {
-                        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-                    }
-                }
-            }
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
         }
     }
 
     signingConfigs {
         getByName("debug") {
-            // 保持默认调试签名配置
         }
     }
 
@@ -168,7 +122,6 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
-
     val cmakeFile = file("src/main/cpp/CMakeLists.txt")
     if (!System.getenv("CI").toBoolean() && cmakeFile.exists()) {
         externalNativeBuild {
@@ -182,35 +135,37 @@ android {
 
     applicationVariants.all {
         val variant = this
-        outputs.all {
-            val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
-            val fileName = "Sesame-TK-$flavorName-${variant.versionName}.apk"
+        variant.outputs.all {
+            // 移除风味名称，仅保留单一版本文件名
+            val fileName = "Sesame-TK-${variant.versionName}.apk"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
     }
 }
 
 dependencies {
-    // 保留你提供的所有依赖，修正语法问题
     implementation(libs.ui.tooling.preview.android)
-    
     val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
     implementation(composeBom)
     testImplementation(composeBom)
     androidTestImplementation(composeBom)
-    
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("org.nanohttpd:nanohttpd:2.3.1")
 
+
     implementation(libs.androidx.constraintlayout)
+
     implementation(libs.activity.compose)
+
     implementation(libs.core.ktx)
     implementation(libs.kotlin.stdlib)
     implementation(libs.slf4j.api)
@@ -220,7 +175,4 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.material)
     implementation(libs.webkit)
-
-    // 补充核心库脱糖依赖（与compileOptions中的isCoreLibraryDesugaringEnabled配套）
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
