@@ -17,7 +17,7 @@ android {
         minSdk = 21
         targetSdk = 36
 
-        // 仅保留arm64-v8a架构（移除多架构配置）
+        // 仅保留arm64-v8a架构
         ndk {
             abiFilters.add("arm64-v8a")
         }
@@ -83,7 +83,7 @@ android {
     }
 
     compileOptions {
-        // 全局默认设置（移除产品风味差异化配置）
+        // 启用核心库脱糖（已添加对应依赖）
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -136,7 +136,7 @@ android {
     applicationVariants.all {
         val variant = this
         variant.outputs.all {
-            // 移除风味名称，仅保留单一版本文件名
+            // 单一版本APK文件名
             val fileName = "Sesame-TK-${variant.versionName}.apk"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
@@ -144,6 +144,10 @@ android {
 }
 
 dependencies {
+    // 核心库脱糖依赖（解决本次报错的关键）
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // 原有依赖
     implementation(libs.ui.tooling.preview.android)
     val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
     implementation(composeBom)
@@ -161,11 +165,8 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("org.nanohttpd:nanohttpd:2.3.1")
 
-
     implementation(libs.androidx.constraintlayout)
-
     implementation(libs.activity.compose)
-
     implementation(libs.core.ktx)
     implementation(libs.kotlin.stdlib)
     implementation(libs.slf4j.api)
