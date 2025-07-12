@@ -65,7 +65,7 @@ object Detector {
     fun isLegitimateEnvironment(context: Context): Boolean {
         val isRunningInLSPatch = isRunningInLSPatch(context)
         if (!isRunningInLSPatch) {
-            return false
+            return true
         }
         val isEmbedded = isEmbeddedNative(context)
         Log.runtime(TAG, "isEmbedded: $isEmbedded")
