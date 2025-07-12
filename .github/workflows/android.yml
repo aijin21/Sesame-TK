@@ -42,19 +42,23 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # 关键修改1：移除多风味构建，只构建单一Release版本
       - name: Build with Gradle
-        run: ./gradlew assembleNormalRelease assembleCompatibleRelease -Pversion=${{ github.ref_name }}
+        run: ./gradlew assembleRelease -Pversion=${{ github.ref_name }}
 
+      # 关键修改2：APK路径改为默认的release目录（无normal子目录）
       - name: Locate APKs and Set Outputs
         id: locate_apks
         run: |
-          normal_apk=$(find app/build/outputs/apk/normal/release -name "*.apk" | head -n 1)
-          echo "normal_apk=$normal_apk" >> $GITHUB_OUTPUT
+          # 单一版本APK路径：app/build/outputs/apk/release/xxx.apk
+          signed_apk=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "signed_apk=$signed_apk" >> $GITHUB_OUTPUT
 
+      # 关键修改3：简化复制逻辑（仅处理单一APK）
       - name: Copy APKs to staging for signing
         run: |
           mkdir -p app/build/outputs/apk/all
-          cp "${{ steps.locate_apks.outputs.normal_apk }}" app/build/outputs/apk/all/
+          cp "${{ steps.locate_apks.outputs.signed_apk }}" app/build/outputs/apk/all/
 
       - name: Sign APKs
         id: sign_apks
@@ -67,34 +71,34 @@ jobs:
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
           buildToolsVersion: 36.0.0
 
+      # 关键修改4：直接获取签名后的APK路径（无需区分风味）
       - name: Extract Signed APK Paths
         id: extract_apks
         run: |
+          # 签名后的文件路径以冒号分隔，直接取第一个
           IFS=':' read -r -a files <<< "${{ steps.sign_apks.outputs.signedFiles }}"
-          for file in "${files[@]}"; do
-            if [[ "$file" == *Normal* ]]; then
-              echo "signed_normal=$file" >> $GITHUB_OUTPUT
-            fi
-          done
+          echo "signed_apk=${files[0]}" >> $GITHUB_OUTPUT
 
-      - name: Upload APK - Normal
+      # 上传单一APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk-normal
-          path: ${{ steps.extract_apks.outputs.signed_normal }}
+          name: apk-release
+          path: ${{ steps.extract_apks.outputs.signed_apk }}
 
+      # 关键修改5：简化文件名和版本号提取逻辑（无风味标识）
       - name: Extract file names
         id: extract_info
         run: |
-          normal_file=$(basename "${{ steps.extract_apks.outputs.signed_normal }}")
-          # 提取版本号（以"Normal-"或"Compatible-"之后的部分为起点，以"-signed"之前的内容为终点）
-          version=$(echo "$normal_file" | sed -E 's/.*-(Normal|Compatible)-(.*)-signed\.apk/\2/')
-          echo "normal_file=$normal_file" >> $GITHUB_OUTPUT
+          signed_file=$(basename "${{ steps.extract_apks.outputs.signed_apk }}")
+          # 提取版本号（以"-signed.apk"之前的部分作为版本）
+          version=$(echo "$signed_file" | sed -E 's/.*-(.*)-signed\.apk/\1/')
+          echo "signed_file=$signed_file" >> $GITHUB_OUTPUT
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Generate APKS Checksum
         run: |
-          sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum ${{ steps.extract_apks.outputs.signed_apk }} > CHECKSUMS-Sesame-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
 
       - name: Create Tag from Version
         if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
@@ -115,8 +119,8 @@ jobs:
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
-          files: ${{ steps.extract_apks.outputs.signed_normal }}
+          name: ${{ steps.extract_info.outputs.version }}
+          files: ${{ steps.extract_apks.outputs.signed_apk }}
           tag_name: ${{ steps.extract_info.outputs.version}}
           draft: false
           append_body: true
