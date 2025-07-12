@@ -71,10 +71,10 @@ android {
         buildConfigField("String", "BUILD_TAG", "\"$buildTag\"")
         buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
 
-        // 修正测试选项配置（使用enabled而非isEnabled）
+        // 修正测试选项配置（使用it.enabled）
         testOptions {
             unitTests.all {
-                enabled = false // 关键修正：Kotlin DSL使用enabled
+                it.enabled = false // 关键修正：通过it引用任务的enabled属性
             }
         }
     }
