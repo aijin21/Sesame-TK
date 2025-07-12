@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.kapt") // 修正为Kotlin DSL语法
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -23,7 +23,7 @@ android {
             abiFilters.add("arm64-v8a")
         }
 
-        // 版本配置（保留原有逻辑）
+        // 版本配置
         val major = 0
         val minor = 2
         val patch = 6
@@ -71,9 +71,10 @@ android {
         buildConfigField("String", "BUILD_TAG", "\"$buildTag\"")
         buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
 
+        // 修正测试选项配置（使用enabled而非isEnabled）
         testOptions {
             unitTests.all {
-                isEnabled = false
+                enabled = false // 关键修正：Kotlin DSL使用enabled
             }
         }
     }
@@ -96,7 +97,6 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            // 保持原有配置
         }
     }
 
@@ -163,7 +163,7 @@ dependencies {
     // OkHttp网络库
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // 原有Compose及AndroidX依赖
+    // Compose及AndroidX依赖
     implementation(libs.ui.tooling.preview.android)
     val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
     implementation(composeBom)
