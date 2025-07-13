@@ -17,12 +17,13 @@ android {
         minSdk = 21
         targetSdk = 36
 
-        // 仅保留arm64-v8a架构（移除多架构配置）
-        ndk {
-            abiFilters.add("arm64-v8a")
+        if (!System.getenv("CI").toBoolean()) {
+            ndk {
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+            }
         }
 
-        // 版本配置（保留原有逻辑）
+        // 版本配置
         val major = 0
         val minor = 2
         val patch = 6
@@ -57,6 +58,7 @@ android {
             "1".toInt()
         }
 
+
         versionCode = gitCommitCount
         versionName = if (buildTag.contains("alpha") || buildTag.contains("beta")) {
             "v$major.$minor.$patch-$buildTag.$buildTargetCode"
@@ -70,6 +72,10 @@ android {
         buildConfigField("String", "BUILD_TAG", "\"$buildTag\"")
         buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
 
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+        }
+
         testOptions {
             unitTests.all {
                 it.enabled = false
@@ -82,15 +88,55 @@ android {
         compose = true
     }
 
+
+    flavorDimensions += "default"
+    productFlavors {
+        create("normal") {
+            dimension = "default"
+            extra.set("applicationType", "Normal")
+        }
+        create("compatible") {
+            dimension = "default"
+            extra.set("applicationType", "Compatible")
+        }
+    }
     compileOptions {
-        // 全局默认设置（移除产品风味差异化配置）
-        isCoreLibraryDesugaringEnabled = true
+        // 全局默认设置
+        isCoreLibraryDesugaringEnabled = true // 启用脱糖
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         compilerOptions {
             jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        }
+    }
+
+    productFlavors.all {
+        when (name) {
+            "normal" -> {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+                kotlin {
+                    compilerOptions {
+                        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+                    }
+                }
+            }
+
+            "compatible" -> {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_11
+                    targetCompatibility = JavaVersion.VERSION_11
+                }
+                kotlin {
+                    compilerOptions {
+                        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
+                    }
+                }
+            }
         }
     }
 
@@ -136,8 +182,8 @@ android {
     applicationVariants.all {
         val variant = this
         variant.outputs.all {
-            // 移除风味名称，仅保留单一版本文件名
-            val fileName = "Sesame-TK-${variant.versionName}.apk"
+            val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
+            val fileName = "Sesame-TK-$flavorName-${variant.versionName}.apk"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
     }
@@ -175,4 +221,19 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.material)
     implementation(libs.webkit)
+    compileOnly(libs.xposed.api)
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+    implementation(libs.okhttp)
+    implementation(libs.dexkit)
+
+    coreLibraryDesugaring(libs.desugar)
+
+    add("normalImplementation", libs.jackson.core)
+    add("normalImplementation", libs.jackson.databind)
+    add("normalImplementation", libs.jackson.annotations)
+
+    add("compatibleImplementation", libs.jackson.core.compatible)
+    add("compatibleImplementation", libs.jackson.databind.compatible)
+    add("compatibleImplementation", libs.jackson.annotations.compatible)
 }
