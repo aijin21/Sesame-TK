@@ -11,6 +11,12 @@ android {
     namespace = "fansirsqi.xposed.sesame"
     compileSdk = 36
 
+    // 将版本配置变量移到这里
+    val major = 0
+    val minor = 2
+    val patch = 6
+    val buildTag = "alpha"
+
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
