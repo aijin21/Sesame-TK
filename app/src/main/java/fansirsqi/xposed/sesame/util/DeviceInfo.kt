@@ -85,7 +85,7 @@ fun DeviceInfoCard(info: Map<String, String>) {
                     Spacer(modifier = Modifier.height(4.dp))
                     // 加一行红色自定义文字
                     Text(
-                        text = "ALLG编译，与原版保持一致。👑",
+                        text = "自行编译，与原版保持一致。👑",
                         fontSize = 12.sp,
                         color = Color.Red
                     )
