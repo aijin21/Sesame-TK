@@ -92,25 +92,13 @@ jobs:
           echo "normal_file=$normal_file" >> $GITHUB_OUTPUT
           echo "version=$version" >> $GITHUB_OUTPUT
 
-      - name: Generate APKS Checksum
-        run: |
-          sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-
-      - name: Create Tag from Version
+      - name: 利用版本号创建标签
         if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const tagName = 'v${{ steps.extract_info.outputs.version }}';
-            console.log(`Creating tag: ${tagName}`);
-            
-            // 创建轻量标签
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/tags/${tagName}`,
-              sha: context.sha
-            });
+        run: |
+          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
+          echo "Creating tag: $VERSION_TAG"
+          git tag "$VERSION_TAG"
+          git push origin "$VERSION_TAG"
             
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
