@@ -11,12 +11,6 @@ android {
     namespace = "fansirsqi.xposed.sesame"
     compileSdk = 36
 
-    // 将版本配置变量移到这里
-    val major = 0
-    val minor = 2
-    val patch = 6
-    val buildTag = "alpha"
-
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
@@ -67,7 +61,7 @@ android {
 
         versionCode = gitCommitCount
         versionName = if (buildTag.contains("alpha") || buildTag.contains("beta")) {
-            "v$major.$minor.$patch-$buildTag.$buildTargetCode"
+            "v$major.$minor.$patch-$buildTag"
         } else {
             "v$major.$minor.$patch-$buildTag"
         }
@@ -189,7 +183,7 @@ android {
         val variant = this
         variant.outputs.all {
             val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
-            val fileName = "Sesame-$flavorName-$major.$minor.$patch-$buildTag.apk"
+            val fileName = "Sesame-${variant.versionName}.apk"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
     }
