@@ -48,13 +48,23 @@ jobs:
       - name: Locate APKs and Set Outputs
         id: locate_apks
         run: |
-          normal_apk=$(find app/build/outputs/apk/normal/release -name "*.apk" | head -n 1)
-          echo "normal_apk=$normal_apk" >> $GITHUB_OUTPUT
+          # 查找APK文件
+          signed_apk=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          
+          # 验证是否找到APK
+          if [ -z "$signed_apk" ]; then
+            echo "未找到APK文件!"
+            exit 1
+          else
+            echo "找到APK: $signed_apk"
+            echo "signed_apk=$signed_apk" >> $GITHUB_OUTPUT
+          fi
 
       - name: Copy APKs to staging for signing
         run: |
           mkdir -p app/build/outputs/apk/all
-          cp "${{ steps.locate_apks.outputs.normal_apk }}" app/build/outputs/apk/all/
+          echo "复制APK: ${{ steps.locate_apks.outputs.signed_apk }}"
+          cp "${{ steps.locate_apks.outputs.signed_apk }}" app/build/outputs/apk/all/
 
       - name: Sign APKs
         id: sign_apks
@@ -70,14 +80,15 @@ jobs:
       - name: Extract Signed APK Paths
         id: extract_apks
         run: |
+          # 签名后的文件路径以冒号分隔，直接取第一个
           IFS=':' read -r -a files <<< "${{ steps.sign_apks.outputs.signedFiles }}"
           echo "signed_normal=$file" >> $GITHUB_OUTPUT
 
-      - name: Upload APK - Normal
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk-normal
-          path: ${{ steps.extract_apks.outputs.signed_normal }}
+          name: apk-release
+          path: ${{ steps.extract_apks.outputs.signed_apk }}
 
       - name: Extract file names
         id: extract_info
@@ -90,7 +101,7 @@ jobs:
 
       - name: Generate APKS Checksum
         run: |
-          sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum ${{ steps.extract_apks.outputs.signed_apk }} > CHECKSUMS-Sesame-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
 
       - name: Create Tag from Version
         if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
@@ -111,9 +122,9 @@ jobs:
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
-          files: ${{ steps.extract_apks.outputs.signed_normal }}
-          tag_name: ${{ steps.extract_info.outputs.version}}
+          name: ${{ steps.extract_info.outputs.version }}
+          files: ${{ steps.extract_apks.outputs.signed_apk }}
+          tag_name: ${{ steps.extract_info.outputs.version }}
           draft: false
           append_body: true
           generate_release_notes: true
