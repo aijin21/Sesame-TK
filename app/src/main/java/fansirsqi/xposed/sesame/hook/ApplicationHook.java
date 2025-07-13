@@ -522,12 +522,12 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                     return false;
                 }
                 // 检查 enableField 的值
-                // if (!baseModel.getEnableField().getValue()) {
-                //     Log.record(TAG, "❌ 芝麻粒已禁用");
-                //     Toast.show("❌ 芝麻粒已禁用");
-                //     Notify.setStatusTextDisabled();
-                //     return false;
-                // }
+                if (!baseModel.getEnableField().getValue()) {
+                    Log.record(TAG, "❌ 芝麻粒已禁用");
+                    Toast.show("❌ 芝麻粒已禁用");
+                    Notify.setStatusTextDisabled();
+                    return false;
+                }
                 // 保持唤醒锁，防止设备休眠
                 if (BaseModel.getStayAwake().getValue()) {
                     try {
