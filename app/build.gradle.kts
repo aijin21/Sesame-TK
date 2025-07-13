@@ -216,8 +216,4 @@ dependencies {
     add("normalImplementation", libs.jackson.core)
     add("normalImplementation", libs.jackson.databind)
     add("normalImplementation", libs.jackson.annotations)
-
-    add("compatibleImplementation", libs.jackson.core.compatible)
-    add("compatibleImplementation", libs.jackson.databind.compatible)
-    add("compatibleImplementation", libs.jackson.annotations.compatible)
 }
