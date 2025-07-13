@@ -73,7 +73,7 @@ android {
         buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
 
         ndk {
-            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+            abiFilters.addAll(listOf("arm64-v8a"))
         }
 
         testOptions {
@@ -94,10 +94,6 @@ android {
         create("normal") {
             dimension = "default"
             extra.set("applicationType", "Normal")
-        }
-        create("compatible") {
-            dimension = "default"
-            extra.set("applicationType", "Compatible")
         }
     }
     compileOptions {
@@ -122,18 +118,6 @@ android {
                 kotlin {
                     compilerOptions {
                         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-                    }
-                }
-            }
-
-            "compatible" -> {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
-                }
-                kotlin {
-                    compilerOptions {
-                        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
                     }
                 }
             }
