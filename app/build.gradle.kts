@@ -9,17 +9,17 @@ plugins {
 
 android {
     namespace = "fansirsqi.xposed.sesame"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
-        minSdk = 21
-        targetSdk = 36
+        minSdk = 28
+        targetSdk = 35
 
         if (!System.getenv("CI").toBoolean()) {
             ndk {
-                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+                abiFilters.addAll(listOf("arm64-v8a"))
             }
         }
 
