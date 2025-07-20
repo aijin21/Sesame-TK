@@ -9,13 +9,13 @@ plugins {
 
 android {
     namespace = "fansirsqi.xposed.sesame"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
-        minSdk = 28
-        targetSdk = 35
+        minSdk = 21
+        targetSdk = 36
 
         if (!System.getenv("CI").toBoolean()) {
             ndk {
