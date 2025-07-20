@@ -68,7 +68,7 @@ import fansirsqi.xposed.sesame.task.antMember.AntMemberRpcCall;
 import fansirsqi.xposed.sesame.util.AssetUtil;
 import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.Maps.UserMap;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.Notify;
 import fansirsqi.xposed.sesame.util.PermissionUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
