@@ -437,12 +437,14 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 Log.printStackTrace(TAG, t);
             }
 
-            hooked = true;
-            Log.runtime(TAG, "load success: " + loadPackageParam.packageName);
-        } catch (Throwable t) {
-            hooked = false;
-            Log.runtime(TAG, "load failed: " + loadPackageParam.packageName);
-            Log.printStackTrace(TAG, t);
+            try {
+                hooked = true;
+                Log.runtime(TAG, "load success: " + loadPackageParam.packageName);
+            } catch (Throwable t) {
+                hooked = false;
+                Log.runtime(TAG, "load failed: " + loadPackageParam.packageName);
+                Log.printStackTrace(TAG, t);
+            }
         }
     }
 
@@ -1100,4 +1102,3 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         return intentFilter;
     }
 }
-
